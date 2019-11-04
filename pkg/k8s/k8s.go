@@ -472,7 +472,7 @@ func CmdDelK8s(ctx context.Context, c calicoclient.Interface, epIDs utils.WEPIde
 
 	// Clean up namespace by removing the interfaces.
 	logger.Info("Cleaning up netns")
-	err = utils.CleanUpNamespace(args, logger)
+	err = utils.CleanUpNamespace(args, conf, logger)
 	if err != nil {
 		return err
 	}

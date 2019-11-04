@@ -460,7 +460,7 @@ func cmdDel(args *skel.CmdArgs) error {
 	}
 
 	// Clean up namespace by removing the interfaces.
-	err = utils.CleanUpNamespace(args, logger)
+	err = utils.CleanUpNamespace(args, conf, logger)
 	if err != nil {
 		return err
 	}

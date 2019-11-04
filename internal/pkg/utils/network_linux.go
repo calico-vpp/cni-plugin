@@ -63,6 +63,22 @@ func DoNetworking(
 	desiredVethName string,
 	routes []*net.IPNet,
 ) (hostVethName, contVethMAC string, err error) {
+	if dp, ok := conf.DataplaneOptions["type"]; ok {
+		if dp == "external" {
+			return doExternalNetworking(args, conf, result, logger, desiredVethName, routes)
+		}
+	}
+	return doLinuxNetworking(args, conf, result, logger, desiredVethName, routes)
+}
+
+func doLinuxNetworking(
+	args *skel.CmdArgs,
+	conf types.NetConf,
+	result *current.Result,
+	logger *logrus.Entry,
+	desiredVethName string,
+	routes []*net.IPNet,
+) (hostVethName, contVethMAC string, err error) {
 	// Select the first 11 characters of the containerID for the host veth.
 	hostVethName = "cali" + args.ContainerID[:Min(11, len(args.ContainerID))]
 	contVethName := args.IfName
@@ -434,7 +450,16 @@ func writeProcSys(path, value string) error {
 }
 
 // CleanUpNamespace deletes the devices in the network namespace.
-func CleanUpNamespace(args *skel.CmdArgs, logger *logrus.Entry) error {
+func CleanUpNamespace(args *skel.CmdArgs, conf types.NetConf, logger *logrus.Entry) error {
+	if dp, ok := conf.DataplaneOptions["type"]; ok {
+		if dp == "external" {
+			return cleanUpExternalNetworking(args, conf, logger)
+		}
+	}
+	return cleanUpLinuxNamespace(args, conf, logger)
+}
+
+func cleanUpLinuxNamespace(args *skel.CmdArgs, conf types.NetConf, logger *logrus.Entry) error {
 	// Only try to delete the device if a namespace was passed in.
 	if args.Netns != "" {
 		logger.WithFields(logrus.Fields{
